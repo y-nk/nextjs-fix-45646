@@ -1,0 +1,40 @@
+diff --git a/node_modules/next/dist/build/entries.js b/node_modules/next/dist/build/entries.js
+index a5d828f..58aca78 100644
+--- a/node_modules/next/dist/build/entries.js
++++ b/node_modules/next/dist/build/entries.js
+@@ -114,6 +114,9 @@ function getEdgeServerEntry(opts) {
+     };
+ }
+ function getAppEntry(opts) {
++    const [_, fileExtension] = opts.pagePath.match(/\.([\w]*)$/i)
++    opts.pageExtensions = ['tsx', fileExtension]
++
+     return {
+         import: `next-app-loader?${(0, _querystring).stringify(opts)}!`,
+         layer: _constants.WEBPACK_LAYERS.server
+diff --git a/node_modules/next/dist/build/index.js b/node_modules/next/dist/build/index.js
+index c74c7ca..8b84b23 100644
+--- a/node_modules/next/dist/build/index.js
++++ b/node_modules/next/dist/build/index.js
+@@ -201,7 +201,7 @@ async function build(dir, conf = null, reactProductionProfiling = false, debugOu
+             const pagesPaths = pagesDir ? await nextBuildSpan.traceChild("collect-pages").traceAsyncFn(()=>(0, _recursiveReaddir).recursiveReadDir(pagesDir, new RegExp(`\\.(?:${config.pageExtensions.join("|")})$`))) : [];
+             let appPaths;
+             if (appDir) {
+-                appPaths = await nextBuildSpan.traceChild("collect-app-paths").traceAsyncFn(()=>(0, _recursiveReaddir).recursiveReadDir(appDir, new RegExp(`^page\\.(?:${config.pageExtensions.join("|")})$`)));
++                appPaths = await nextBuildSpan.traceChild("collect-app-paths").traceAsyncFn(()=>(0, _recursiveReaddir).recursiveReadDir(appDir, new RegExp(`page\\.(?:${config.pageExtensions.join("|")})$`)));
+             }
+             const middlewareDetectionRegExp = new RegExp(`^${_constants.MIDDLEWARE_FILENAME}\\.(?:${config.pageExtensions.join("|")})$`);
+             const rootDir = _path.default.join(pagesDir || appDir, "..");
+diff --git a/node_modules/next/dist/lib/recursive-readdir.js b/node_modules/next/dist/lib/recursive-readdir.js
+index 77f04c9..41a6d05 100644
+--- a/node_modules/next/dist/lib/recursive-readdir.js
++++ b/node_modules/next/dist/lib/recursive-readdir.js
+@@ -23,7 +23,7 @@ async function recursiveReadDir(/** Directory to read */ dir, /** Filter for the
+             await recursiveReadDir(absolutePath, filter, ignore, arr, rootDir);
+             return;
+         }
+-        if (!filter.test(part.name)) {
++        if (!filter.test(absolutePath)) {
+             return;
+         }
+         arr.push(absolutePath.replace(rootDir, ""));
